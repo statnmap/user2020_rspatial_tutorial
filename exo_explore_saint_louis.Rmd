@@ -1,0 +1,636 @@
+---
+title: "explore_saint_louis"
+output: html_document
+---
+
+# To know before starting
+
+- You can open file *"explore_saint_louis.html"* to see the outputs expected in this Rmd of exercises. 
+  + If you are not sure about you need to do, please refer first to the html to see if the output can help you.
+- There is no need to add new code chunk to answer questions. Please fill your code inside the chunks available below each question
+- Some code is commented in chunks. We recommend to uncomment the code before trying to answer the question.
+  + Select all lines of code to uncomment
+  + Do "Ctrl + Shift + C" to uncomment
+- We recommend you to carefully read the questions. There may be part of the answers in the text
+- If you have a question, you can tag instructors with `@help` in the Chat.
+- On different steps, you are asked to save your file on the disk, in directory "data/data-out". This saved is usually re-use on a following step.
+  + Saving files in a different directory than raw data allows you to differentiate data to keep from data you can safely remove as you can recalculte them.
+  + Note that if you are stuck, you can find the file you were supposed to create in "data/data-out-solution"
+- Bonus are here if you are quicker than the rest of the group. There is no need to do them during this tutorial.
+- Note that a Rmd file with all the answers will be shared later on in the Github repository of the tutorial
+
+# Packages & setup
+```{r setup, include=FALSE}
+# library(sf)
+# library(dplyr)
+# library(tmap)
+# library(readr)
+```
+
+## Create a directory where to save data outputs
+
+```{r attendees-setup}
+# dir.create("data/data-out")
+```
+
+# An R Spatial Tour of St. Louis
+
+## Scenario
+If you were to come in person to useR! 2020 in St. Louis, you would have made many friends during the conference. You would have try to find good places to spend the evenings to continue your exciting discussions and have some fun! That won't be for this year, but you'll surely find another reason to come to St. Louis. To prepare your future venue, let's play with some data!
+
+### Exercise Objectives
+- Loading a csv into RStudio.
+- Loading a shapefile into RStudio
+- Getting the coordinate system of spatial data.
+- Projecting data into a coordinate system.
+- Filtering spatial data based on set criteria.
+- Running basic spatial operations such as a spatial join and buffer, and calculating distance
+- Learning how to create static maps.
+- Discover how to create dynamic maps.
+
+# **Exercises for Drawing maps with R**
+
+## Read some datasets
+
+You and your friends are trying to plan things out. Luckily attendees from St. Louis have data of restaurants and interesting places to go to. They also provided data of the neighborhoods in the city which was downloaded from the [City of St. Louis Open Data Portal](https://www.stlouis-mo.gov/data/formats/format.cfm?id=21) 
+
+
+*We will explain this lines of code later. For now, you can uncomment and run.*
+```{r question-read}
+# stl_neighborhoods_nad <- read_sf("data/stl_neighborhoods/stl_neighborhoods.shp")
+# stl_restaurants_wgs84 <- read_sf("data/stl_restaurants/stl_restaurants_wgs84.gpkg"))
+```
+
+## Render a first overview of the area
+
+For your restaurant visits, you will need to provide nice and informative maps. It is time to try some presentation of spatial datasets using {tmap}.
+
+- Fill in the blanks to choose the correct representation of the neighborhoods and restaurants using {tmap} functions. 
+  + Note that `stl_neighborhoods_nad` is a spatial dataset of polygons
+  + Note that `stl_restaurants_wgs84` is a spatial dataset of points
+
+```{r question8a}
+# tm_shape(stl_neighborhoods_nad) +
+#   _____() +
+# tm_shape(stl_restaurants_wgs84) +
+#   _____()
+#   
+```
+
+
+- Change the colors of borders of the neighborhoods in red (hex code: `#C8072A`)
+- Change the size of restaurants points to `0.1`.
+- Change the color of restaurants points to blue `"#012174"`
+
+```{r question8b}
+# tm_shape(stl_neighborhoods_nad) +
+#   _____(_____ = "#C8072A") +
+# tm_shape(stl_restaurants_wgs84) +
+#   _____(_____ = 0.1, ____ = "#012174")
+#   
+```
+
+- Change the colors of the restaurant according to variable `ZIP_Code`
+  + Note the choice of a categorical palette
+
+```{r question8c}
+# tm_shape(stl_neighborhoods_nad) +
+#   _____(_____ = "#C8072A") +
+# tm_shape(stl_restaurants_wgs84) +
+#   _____(_____ = 0.1, col = _____, palette = "Set2")
+# 
+```
+
+
+> Please notify the instructors that you reached this point with message: "tmap-before-bonus"
+
+- Add title, legend and North arrow
+  + *BONUS: Explore parameters of `?tm_layout` for a better representation of the area*
+```{r question8d}
+# tm_shape(stl_neighborhoods_nad) +
+#   _____(_____ = "#C8072A") +
+# tm_shape(stl_restaurants_wgs84) +
+#   _____(_____ = 0.1, col = _____, palette = "Set2") +
+# tm_scale_bar() +
+# tm_compass(position = c("left", "bottom")) +
+# tm_layout(title = "Some restaurants in St. Louis, MO")
+```
+
+
+# **Exercises for Spatial vectors data: read & project**
+
+Above, you used a shapefile of restaurants, which we prepared for you. Indeed, the original `restaurants` file is a classical csv that you will have to turn into spatial dataset yourself.  
+Also, to choose a restaurant that suits your needs, you will want to explore what is around. The `neighborhoods` is a first source of information but we also have some points of interest (`poi`) to share with you. This file is also proposed as a csv file.  
+Finally, to reduce potential problems with spatial datasets, it is recommended to manipulate all dataset in the same coordinates reference system, and choose one that is adapted to the area.  
+
+*Do not worry, we're going to realize all these steps one by one together.*
+
+## Load the raw datasets
+
+Let's load this data into RStudio and see what we have to choose from. 
+- Uncomment and Fill in the blanks to load in the datasets. 
+- Note that:
+  + `stlouis_restaurants.csv` is a classical dataset in a csv file
+  + `stl_poi.csv` is a classical dataset in a csv file
+  + `stl_neighborhoods.shp` is an ESRI spatial shapefile
+
+```{r question1}
+# # csv file of the restaurants
+# stl_restaurants <- _____("data/stl_restaurants/stlouis_restaurants.csv")
+# # csv file of the points of interest 
+# stl_poi <- _____("data/stl_poi/stl_poi.csv")
+# # shp file of the neighborhoods
+# stl_neighborhoods_nad <- _____("data/stl_neighborhoods/stl_neighborhoods.shp")
+```
+
+
+## Turn the classical datasets into spatial datasets
+
+- Create the spatial layer `stl_restaurants_wgs84` from the `stl_restaurants` dataset. This will be a spatial dataset of points
+- Create the spatial layer `stl_poi_wgs84` from the `stl_poi` dataset. This will be a spatial dataset of points
+- Note that the CRS of coordinates inside the original datasets is Geographic coordinates: WGS84, CRS: 4326
+
+
+```{r question3}
+# #restaurants
+# stl_restaurants_wgs84 <- stl_restaurants %>%
+# _____(coords = c(_____, _____), crs = 4326)
+# 
+# # Can you create the code from scratch for creating a points shapefile from poi?
+# _____ <- stl_poi %>%
+#   _____
+# 
+```
+
+
+- Draw the map to verify if everything is good
+
+```{r question3-map}
+# tm_shape(stl_neighborhoods_nad) +
+#   tm_borders() +
+# tm_shape(stl_restaurants_wgs84) +
+#   tm_symbols(size = 0.1, col = "#440154") + # Restaurant in purple
+# tm_shape(stl_poi_wgs84) +
+#   tm_symbols(size = 0.1, col = "#f15522") + # POI in orange
+# tm_scale_bar() +
+# tm_compass(position = c("left", "bottom")) +
+# tm_layout(
+#   title = "Restaurants and POI in Saint-Louis, MI",
+#   inner.margins = c(0.1, 0.3, 0.1, 0),
+#   legend.position = c("left", "center")
+# )
+```
+
+
+- Export the layer to your "data-out" directory with the GeoPackage format (`.gpkg`) for later use. 
+
+```{r question3-export}
+# #restaurants data
+# _____(stl_restaurants_wgs84, "data/data-out/stl_restaurants_wgs84.gpkg")
+# #poi data
+# _____(stl_poi_wgs84, "data/data-out/stl_poi_wgs84.gpkg")
+```
+
+
+## Read your shapefiles from disk into Rstudio
+
+- Read the shapefiles you just saved on the disk
+
+*Note that if there is any problem with the files you created, you can use the correct files in "data-out-solution". But trust yourself! You're good! What is the risk really? To end up in a restaurant in the wrong city? Well... It could be good too...*
+
+```{r question4}
+# stl_restaurants_wgs84 <- _____("data/data-out/_____")
+# stl_poi_wgs84 <- _____("data/data-out/_____")
+```
+
+
+## Transform your spatial dataset into the correct projection for the area
+
+You probably don't know the Coordinate Reference System that you need to use for this specific area. The good news is that you can find the correct one by checking the CRS of the `neighborhoods` shapefile. Indeed, this shapefile has been created by people knowing this area.
+
+- Fill out the code to check the CRS of the shapefile.
+- What is the name of the CRS? 
+- Can you spot an EPSG number?
+
+```{r question2}
+# ____(stl_neighborhoods_nad)
+# 
+```
+
+
+Now that you have the information about the CRS of the neighborhoods shapefile, you can 
+
+- Transform both the points shapefiles into this CRS
+  + Use directly the content of `st_crs(stl_neighborhoods_nad)` as in the example. _Indeed, there is no EPSG number in "ID" but a specific ESRI number._
+  + Restaurants and POI
+- Save the resulting files on your disk in "data-out" as GeoPackage
+
+
+```{r question5}
+# # Transform the CRS of restaurants to NAD83(2011) / Missouri East.
+# stl_restaurants_nad <- stl_restaurants_wgs84 %>%
+#   _____(crs = st_crs(stl_neighborhoods_nad))
+# # Save on disk
+# _____(stl_restaurants_nad, "___/stl_restaurants_nad.gpkg")
+# 
+# # Transform the CRS of the POI to NAD83(2011) / Missouri East.
+# stl_poi_nad <- stl_poi_wgs84 %>%
+#   _____
+# # Save on disk
+# _____(stl_poi_nad, "___/stl_poi_nad.___")
+```
+
+
+## Read your shapefiles from disk into Rstudio
+
+Let's import the newly created shapefile. 
+
+*Note that if there is any problem with the files you created, you can use the correct files in "data-out-solution". Everything is going to be fine! You're not alone!*
+
+```{r question6}
+# # If you used the same names and directory, there should be nothing to change here
+# stl_restaurants_nad <- read_sf("data/data-out/stl_restaurants_nad.gpkg")
+# stl_poi_nad <- read_sf("data/data-out/stl_poi_nad.gpkg")
+```
+
+
+## Check the CRS of file loaded
+
+Let's check the shapefiles to confirm that the CRS is NAD83(2011) / Missouri East.
+
+```{r question6-check}
+# # Checking the CRS
+# _____(stl_restaurants_nad)
+# _____(stl_poi_nad)
+# 
+```
+
+
+> Please notify the instructors that you reached this point with message: "read-project-before-bonus"
+
+## BONUS: Explore interactively
+
+Before you get too carried away with exploring St. Louis, you need to work smarter and not harder! You probably noticed that restaurants in the files we provided are in a small area in Saint-Louis.  
+Next, we will narrow around the area you're going to explore and then choose restaurants from there.  
+
+- To do so, you can explore interactively the area to find out the name of neighborhoods in which restaurants are.
+  + You can view any {tmap} object as interactive if you change the `mode` in `tmap_mode()` as follows.
+- Click on the features to see more informations
+
+```{r}
+
+
+
+```
+
+
+# **Exercises for Manipulating vector data: Use the {tidyverse}**
+
+You will try to find a place to eat according to characteristics of the restaurants.  
+
+> In case you did not realize all steps before, you can run the "# Read your shapefile sections", change `"data-out"` by `"data-out-solution"`, and you will have all shapefiles required for the following.
+
+
+## Explore the type of restaurants available
+
+You and your friends decide that you want to go get a bite to eat before heading off to see the arch. You're first interested in knowing what types of restaurants are around and how many fit each category.
+
+- Fill in the blanks to summarize the restaurants shapefile by `Type`
+- How many types of restaurants are there? 
+- What kind of cuisine has the most restaurants and how many restaurants are there?
+
+```{r question7}
+# restaurant_type_nad <- stl_restaurants_nad %>%
+#   _____(Type) %>% 
+#   arrange(____)
+# 
+```
+
+
+
+## Narrow the area of interest to change the view of our maps
+
+Since you know the neighborhoods that most of the points lie in, let's filter these five neighborhoods out to create nicer maps. Indeed, in previous maps, you probably realised that the list of restaurants available was concentrated in a specific part of the city. This was not really easy to differentiate points on the large map.  
+
+- Fill in the code to filter out `"Downtown", "Near North Riverfront", "Midtown", "Covenant Blu-Grand Center", "Downtown West"`
+- Plot these polygons along with the restaurants and points of interest `stl_restaurants_nad` and points of interest `stl_poi_nad` shapefiles.
+  + Note the use of parameter `is.master` in `tm_shape()`
+
+```{r question9}
+# # filter
+# areas_of_interest_nad <- stl_neighborhoods_nad %>%
+#   filter(_____ %in% c("Downtown", "Near North Riverfront", "Midtown", "Covenant Blu-Grand Center", "Downtown West"))
+#   
+# # plot
+# tm_shape(stl_neighborhoods_nad) +
+#   tm_borders() +
+# tm_shape(areas_of_interest_nad, is.master = TRUE) +
+#   _____() +
+# tm_shape(stl_restaurants_nad) +
+#   _____(size = 0.1, col = "#C8072A") +
+# tm_shape(stl_poi_nad) +
+#   _____(size = 0.1, col = "#012174") +
+# tm_scale_bar() +
+# tm_compass(position = c("left", "bottom")) +
+# tm_layout(
+#   title = "Restaurants and POI in Saint-Louis, MI",
+#   title.bg.color = "#ffffff",
+#   inner.margins = c(0.1, 0.1, 0.1, 0.1)
+# )
+```
+
+
+
+## Let's go to "Downtown" neighborhood!
+
+After much discussion with your friends, you decide to just try one of restaurants in the `Downtown` neighborhood because it's close to the conference site. *Here we only filter out `Downtown` from the neighborhoods. Intersection between this layer and the restaurants one will be realised in the next section.*
+
+- Create a new spatial object called `downtown_nad` that filters only the `Downtown` neighborhood 
+- Export it on "data-out" in your disk using GeoPackage format.  
+
+```{r question11}
+# # Filter
+# downtown_nad <- stl_neighborhoods_nad %>%
+#   _____(_____ == "Downtown")
+# 
+# # Export
+# _____(_____, "_____/downtown_nad.gpkg")
+```
+
+
+## Read your shapefiles from disk into Rstudio
+
+Let's import the newly created shapefile. 
+
+*Note that if there is any problem with the files you created, you can use the correct files in "data-out-solution". You know how it works now!*
+
+```{r question11-read}
+# # If you used the same names and directory, there should be nothing to change here
+# downtown_nad <- read_sf("data/data-out/downtown_nad.gpkg")
+```
+
+
+
+## Find a good rated restaurant
+
+You are ready to choose a random restaurant, but you're not stupid! You're a _gourmet_. You want to make sure that you go to a restaurant that has at least a four star Yelp rating. Fortunately, we have a file with ratings that you will need to combine with your spatial dataset of restaurants.
+
+- Read restaurants ratings in the external file
+
+```{r question-read-ratings}
+# ratings <- read_csv("data/stl_restaurants/restaurants_ratings.csv")
+```
+
+
+- Join spatial layer of restaurants `stl_restaurants_nad` with `ratings`, in order to keep all points of restaurants, even if there is no rating.
+  + *Note that not all restaurants have a rating*
+  + *For convenience, after join, we reorder columns to keep `geometry` at the end*
+
+```{r question-join-ratings}
+# stl_restaurants_rates_nad <- ____ %>% 
+#   ____(____, by = "id") %>% 
+#   select(-contains("geom"), geom)
+```
+
+
+- Filter the `stl_restaurants_rates_nad` shapefile to restaurants that have a star rating that is four and above 
+- Save it into a new spatial object called `fourstar_restaurants_nad`.  
+- How many restaurants have at least a four star rating?
+
+
+```{r question10}
+# # filter
+# fourstar_restaurants_nad <- stl_restaurants_rates_nad %>%
+#   _____(_____ >= 4)
+# # save
+# write_sf(fourstar_restaurants_nad, "data/data-out/fourstar_restaurants_nad.gpkg"))
+```
+
+
+
+There are `r nrow(fourstar_restaurants_nad)` four stars restaurants in the complete list.
+
+- Plot the four stars rated restaurants
+
+```{r}
+# # plot
+# tm_shape(stl_neighborhoods_nad) +
+#   tm_borders() +
+# tm_shape(areas_of_interest_nad, is.master = TRUE) +
+#   tm_polygons() +
+# tm_shape(fourstar_restaurants_nad) +
+#   tm_symbols(size = 0.1, col = "yellow") +
+# tm_scale_bar() +
+# tm_compass(position = c("LEFT", "bottom")) +
+# tm_layout(
+#   title = "Four stars rated restaurants\nin Saint-Louis, MI",
+#   title.bg.color = "#ffffff",
+#   inner.margins = c(0.1, 0.1, 0.1, 0.1)
+# )
+```
+
+
+## Read your shapefiles from disk into Rstudio
+
+Let's import the newly created shapefile. 
+
+*Note that if there is any problem with the files you created, you can use the correct files in "data-out-solution". Yes I know... But this is to help you if you're stuck.*
+
+```{r question10-read}
+# # If you used the same names and directory, there should be nothing to change here
+# fourstar_restaurants_nad <- read_sf("data/data-out/fourstar_restaurants_nad.gpkg")
+```
+
+
+
+> Please notify the instructors that you reached this point with message: "tidyverse-before-bonus"
+
+## BONUS: Find out restaurants that are above the overall average Yelp rating.
+
+In case your filters are too restrictive, you may want to find a restaurant which is at least above the average rating of all restaurants. 
+
+- Can you create a map that identifies clearly which restaurants have a rating above the overall average?
+
+```{r question10-bonus}
+# # identify rating
+# higher_restaurants_nad <- stl_restaurants_rates_nad %>%
+#   ____()
+# 
+# # plot
+# tm_shape(stl_neighborhoods_nad) +
+#   tm_borders() +
+# tm_shape(areas_of_interest_nad, is.master = TRUE) +
+#   tm_borders(lwd = 3)
+```
+
+
+# **Exercises for Manipulating vector data: Spatial manipulations**
+
+It is now time to really choose a restaurant. This will be a high rated restaurant in the "Downtown" neighborhood.  
+
+> In case you did not realize all steps before, you can run the "# Read your shapefile sections", change `"data-out"` by `"data-out-solution"`, and you will have all shapefiles required for the following.
+
+## Find good rated restaurants in the Downtown neighborhood
+
+- Do a spatial join in which you will only keep the high rated restaurants `fourstar_restaurants_nad` that are in the Downtown neighborhood `downtown_nad`. 
+- How many restaurants are located in the Downtown neighborhood? 
+
+```{r question12a}
+# downtown_high_restaurants_nad <- fourstar_restaurants_nad %>%
+#   ____(downtown_nad)
+```
+
+There are `nrow(downtown_high_restaurants_nad)` high rated restaurants in the Downtown neighborhood.
+
+- Map the restaurants in downtown neighborhood. 
+  + Choose a representation allowing to distinguish different types of restaurants
+  + *Note that symbolizing the restaurant points by type is for exploration purposes only and if you want to follow good cartographic principles, it is probably a good idea to do further data manipulation to minimize categories.* 
+```{r question12}
+# tm_shape(stl_neighborhoods_nad) +
+#   _____() +
+# tm_shape(downtown_high_restaurants_nad, is.master = TRUE) +
+#   _____(___ = "Type") +
+# tm_compass(position = c("right", "bottom")) +
+# tm_scale_bar() +
+# ____(
+#   title = "High rated Restaurants in Downtown, Saint-Louis, MI",
+#   title.bg.color = "#ffffff",
+#   inner.margins = c(0.2, 0.5, 0.3, 0.1),
+# )
+# 
+```
+
+
+## What can we visit?
+
+If you stay the weekend on site, you need to plan some visits. Let's imagine that you sleep in the hotel `"Marriott St. Louis Grand"` where the conference was planned. There are at least two places to visit. You have to go to the `"Gateway Arch"`, one of the most famous spots in St. Louis (if not the most famous!). You may also want to visit the newly opened aquarium, the `"St. Louis Aquarium at Union Station"`. You will first go to the closest spot, then head to the second location. Finally, you will return back to the hotel.
+
+- Calculate the distances between these three spots with the direct use of `st_distance()`.
+- Which spot is closest to the conference hotel?
+
+```{r question13}
+# # students will calculate the distance from the hotel. The first entry you list will be the first element in the matrix, the second element will be the second element in the matrix, and so on.
+# interesting_spots_nad <- stl_poi_nad %>%
+#   filter(___ %in% c("Marriott St. Louis Grand", "St. Louis Aquarium at Union Station", "Gateway Arch"))
+# 
+# _____(interesting_spots_nad)
+# 
+```
+
+
+- Another way to find the closest spot to the hotel is to calculate distances from the hotel to the spots.
+  + Separate spots locations into two spatial datasets
+  + Add the distance to the hotel as a variable inside the 2-spots dataset
+
+```{r question13-dists}
+# # Extract hotel position
+# hotel_nad <- stl_poi_nad %>%
+#   filter(POI == "Marriott St. Louis Grand")
+# 
+# # Extract two spots positions
+# two_spots_nad <- stl_poi_nad %>%
+#   filter(____ %in% c("St. Louis Aquarium at Union Station", "Gateway Arch")) %>%
+#   # calculate distance
+#   mutate(
+#     ____ = ____(geom, hotel_nad)
+#   ) %>% 
+#   # order from nearest to farthest
+#   arrange(distance_hotel)
+# 
+```
+
+
+- Plot two spot with size according to distance
+
+```{r}
+# tm_shape(stl_neighborhoods_nad) +
+#   tm_borders() +
+# tm_shape(downtown_nad, is.master = TRUE) +
+#   tm_borders() +
+# tm_shape(hotel_nad) +
+#   tm_symbols(size = 0.25, col = "#ff0000", shape = 20) +
+# tm_shape(two_spots_nad) +
+#   tm_symbols(size = "distance_hotel", col = "#00bbff", shape = 20) +
+# tm_compass(position = c("right", "bottom")) +
+# tm_scale_bar() +
+# tm_layout(
+#   title = "Two insteresting spots and the hotel, Saint-Louis, MI",
+#   title.bg.color = "#ffffff",
+#   inner.margins = c(0.2, 0.5, 0.3, 0.1),
+#   legend.position = c("left", "bottom"),
+#   legend.bg.color = "#ffffff",
+#   legend.bg.alpha = 0.8
+# )
+```
+
+
+> Please notify the instructors that you reached this point with message: "spatial-manip-before-bonus"
+
+## BONUS: Mapping other sight seeing spots close to the hotel
+
+Visiting two spots may not be enough for you. You decide to make a map of all points of interest in a radius of 0.5km around your hotel. Then, you'll decide what to add on your visiting list.
+
+- Create a buffer area of 0.5km around your hotel position `hotel_nad`.
+- Intersect this newly created polygon area with the list of all poi `stl_poi_nad`. 
+- Draw the map 
+  + Present at least the hotel position, the buffer area and the sightseeing spots
+  + Make sure that the color of your sightseeing spots are symbolized by `Type`.
+  + Include a title, legend, scale bar (positioned in the left-bottom), and north arrow (positioned in the right-top).
+  + Make sure to correctly define the inner margins of the layout
+
+```{r question14}
+# # Create buffer area around hotel position
+# hotel_buffer_nad <- hotel_nad %>% 
+#   ____(dist = ____)
+# 
+# # Spatial join between poi and buffer area
+# stl_poi_buffer_nad <- stl_poi_nad %>% 
+#   ____(hotel_buffer_nad)
+# 
+# # Map
+# tm_shape(stl_neighborhoods_nad) +
+#   tm_borders() +
+# tm_shape(stl_poi_nad, is.master = TRUE) +
+#   tm_symbols(col = "grey80", size = 0.25, shape = 20) +
+# tm_shape(____) +
+#   ____ +
+#   ____
+# tm_compass(position = ____) +
+# tm_scale_bar(position = ____) +
+# ____(
+#   title = ____
+# ) +
+# tm_credits("Data sources: City of St. Louis, \nReferenceUSA, Google", size = 0.5, just = c("right", "bottom"))
+#   
+```
+
+
+## Extra BONUS: If you are still awake...
+
+*You can keep this part as homework for next week*
+
+You are still excited from a full day of sightseeing and learning how to use {tmap} and you cannot sleep. You decide that you want to make some more maps. You have been hearing so much about St. Louis barbeque and decide to make a map of barbeque restaurants in St. Louis that have a rating over 4.0. Fill in the blanks in the code to do the following:
+
+- Use the `areas_of_interest_nad` polygon to make your map.
+- Filter to only barbeque restaurants that have a rating of 4.0 and above. 
+  + If you did one of the previous exercises, you should already have part of the information to do this.
+- Filter out the conference hotel and save it as a separate point.
+  + You may already have it in your layers available
+- Symbolize by color. Color the barbeque restaurants blue (`#012174`) and color the conference hotel point red (`#C8072A`).
+- Add text labels to the restaurant points layer.
+- Include a title, legend, scale bar (positioned in the left-bottom), and north arrow (positioned in the center-center).
+
+```{r extra1-question}
+# barbeque_nad <- _____ 
+# 
+# 
+# tm_shape(stl_neighborhoods_nad) +
+#   tm_borders() +
+# tm_shape(areas_of_interest_nad, is.master = TRUE) +
+#   tm_polygons() +
+# _____ +
+#   tm_credits("Data sources: City of St. Louis, \nReferenceUSA, Google", size = 0.5, just = c("right", "bottom"))
+```
+
+
+
