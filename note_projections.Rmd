@@ -1,0 +1,29 @@
+---
+title: "Note on the projections used in the tutorial"
+author: "Sébastien Rochette"
+date: "29/07/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(sf)
+# shp file of the neighborhoods
+stl_neighborhoods_nad <- read_sf(here::here("data", "stl_neighborhoods", "stl_neighborhoods.shp"))
+st_crs(stl_neighborhoods_nad)
+```
+
+The output you see is the new version of information for coordinates reference system. It presents a lot of information that you do not realy need to get right now.
+Note that the custom name of the projection is: `"NAD_1983_StatePlane_Missouri_East_FIPS_2401_Feet"`  
+If you are looking for the ID reference of your spatial dataset, it is indeed the last `ID`, others in `CONVERSION` are EPSG related to convert the projected reference system you are using from the base CRS in `BASEGEOGCRS`.  
+Also, as you noticed, the file you have is very specific. There is no EPSG for it. This means that it was not abbreviated by the "European Petroleum Survey Group" (EPSG) but by ESRI (Company selling ArcGIS).  
+Hence, if you want to use this CRS number to transform other data, you can not directly write `st_transform(crs = 102696)`, it will not work.
+You need to write `st_transform(crs = "ESRI:102696")`.
+But this will only work if you are using system library PROJ version over 5.0. Which is the case in ThinkR SantaCruz server.
+If you want to know a little more on the subject, here is a link among others: `https://gdal.org/tutorials/osr_api_tut.html`  
+But as I said, the details are not of major importance today. Just look at the last `ID` number.
