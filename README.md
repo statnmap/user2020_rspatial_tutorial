@@ -3,6 +3,11 @@
 
 # First steps in spatial handling and visualization
 
+This repository contains the course material of our useR\! 2020
+tutorial. You can watch the video (with english subtitles) of the
+presentation parts (when we present the slides) on the Youtube
+RConsortium channel there: <https://youtu.be/1Hp8MO82t4g>
+
 **Instructors: [Sébastien Rochette](https://twitter.com/statnmap),
 [Dorris Scott](https://twitter.com/Dorris_Scott), [Jakub
 Nowosad](https://twitter.com/jakub_nowosad)**
@@ -79,6 +84,6 @@ recommended.
   - Follow `#RSpatialChat` on Tuesday’s on Twitter lead by
     [@CivicAngela](https://twitter.com/CivicAngela)
 
-  - Join `R4DS` Slack community, there is a `rspatial` channel
+  - Join `R4DS` Slack community, there is the `help-6-spatial` channel
 
   - There is a Telegram group in Spanish: `RSpatial_ES`
